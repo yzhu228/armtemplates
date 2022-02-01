@@ -1,0 +1,44 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+        {
+            "name": "az104Vnet",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "192.168.0.0/16"
+                    ]
+                },
+                "copy": [
+                    {
+                        "name": "subnets",
+                        "count": 2,
+                        "input": {
+                            "name": "[concat(resourceGroup().name, 'Subnet', copyIndex('subnets', 1))]",
+                            "properties": {
+                                "addressPrefix": "[concat('192.168.', copyIndex('subnets', 1), '.0/24')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "vnetId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', 'az104Vnet')]"
+        },
+        "subnetIds": {
+            "type": "array",
+            "copy": {
+                "count": 2,
+                "input": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'azv104Vnet', concat(resourceGroup().name, 'Subnet', copyIndex(1)))]"
+            } 
+        }
+    }
+}
