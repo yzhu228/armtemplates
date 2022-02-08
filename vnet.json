@@ -37,7 +37,7 @@
             "type": "array",
             "copy": {
                 "count": 2,
-                "input": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'azv104Vnet', concat(resourceGroup().name, 'Subnet', copyIndex(1)))]"
+                "input": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'az104Vnet', concat(resourceGroup().name, 'Subnet', copyIndex(1)))]"
             } 
         }
     }

@@ -5,28 +5,70 @@
         "publicIpName": {
             "type": "string",
             "defaultValue": "az104PublicIp"
+        },
+        "nicName": {
+            "type": "string",
+            "defaultValue": "az104Nic"
+        },
+        "nicDomainNameBase": {
+            "type": "string",
+            "defaultValue": "az104pub92"
+        },
+        "numberOfVm": {
+            "type": "int",
+            "defaultValue": 1
         }
     },
     "resources": [
         {
-            "name": "[parameters('publicIpName')]",
+            "name": "linkedVnet",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "relativePath": "vnet.json",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {}
+            }
+        },
+        {
+            "name": "linkedNsg",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "relativePath": "nsg.json",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {}
+            }
+        },
+        {
+            "name": "[concat(parameters('publicIpName'), copyIndex(1))]",
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2020-11-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "az104pub921"
+                    "domainNameLabel": "[concat(parameters('nicDomainNameBase'), copyIndex(1))]"
                 }
+            },
+            "copy": {
+                "name": "publicIp",
+                "count": "[parameters('numberOfVm')]"
             }
         },
         {
-            "name": "networkInterface1",
+            "name": "[concat(parameters('nicName'), copyIndex(1))]",
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2020-11-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('publicIpName'), copyIndex(1)))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -35,15 +77,31 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'az104Vnet', 'az104Subnet1')]"
+                                "id": "[reference('linkedVnet').outputs.subnetIds.value[0]]"
                             },
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('publicIpName'), copyIndex(1)))]"
                             }
                         }
                     }
-                ]
+                ],
+                "networkSecurityGroup": {
+                    "id": "[reference('linkedNsg').outputs.networkSecurityGroup.value]"
+                }
+            },
+            "copy": {
+                "name": "nics",
+                "count": "[parameters('numberOfVm')]"
             }
         }
-    ]
+    ],
+    "outputs": {
+        "nicIds": {
+            "type": "array",
+            "copy": {
+                "count": "[parameters('numberOfVm')]",
+                "input": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('nicName'), copyIndex(1)))]"
+            } 
+        }
+    }
 }
