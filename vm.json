@@ -2,17 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "publicIpName": {
+        "vmNameBase": {
             "type": "string",
-            "defaultValue": "az104PublicIp"
-        },
-        "nicName": {
-            "type": "string",
-            "defaultValue": "az104Nic"
-        },
-        "nicDomainNameBase": {
-            "type": "string",
-            "defaultValue": "az104pub92"
+            "defaultValue": "az104WinVm"
         },
         "numberOfVm": {
             "type": "int",
@@ -21,48 +13,78 @@
     },
     "resources": [
         {
-            "name": "[concat(parameters('publicIpName'), copyIndex(1))]",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2020-11-01",
-            "location": "[resourceGroup().location]",
+            "name": "linkedNic",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
             "properties": {
-                "publicIPAllocationMethod": "Dynamic",
-                "dnsSettings": {
-                    "domainNameLabel": "[concat(parameters('nicDomainNameBase'), copyIndex(1))]"
+                "mode": "Incremental",
+                "templateLink": {
+                    "relativePath": "vnic.json",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "numberOfVm": {
+                        "value": "[parameters('numberOfVm')]"
+                    }
                 }
-            },
-            "copy": {
-                "name": "publicIp",
-                "count": "[parameters('numberOfVm')]"
             }
         },
         {
-            "name": "[concat(parameters('nicName'), copyIndex(1))]",
-            "type": "Microsoft.Network/networkInterfaces",
-            "apiVersion": "2020-11-01",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
-            ],
+            "name": "linkedStorage",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
             "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipConfig1",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[reference('vnet').outputs.subnetIds[0]]"
-                            },
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('publicIpName'), copyIndex(1)))]"
-                            }
-                        }
-                    }
-                ]
-            },
+                "mode": "Incremental",
+                "templateLink": {
+                    "relativePath": "storage.json",
+                    "contentVersion": "1.0.0.0"
+                }
+            }
+        },
+        {
+            "name": "[concat(parameters('vmNameBase'), copyIndex(1))]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-03-01",
+            "location": "[resourceGroup().location]",
             "copy": {
-                "name": "nics",
+                "name": "multipleVms",
                 "count": "[parameters('numberOfVm')]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D2_v3"
+                },
+                "osProfile": {
+                    "computerName": "windowsVM1",
+                    "adminUsername": "yzhu",
+                    "adminPassword": "Insuit-46-meant-29"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "windowsVM1OSDisk",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[reference('linkedNic').outputs.nicIds.value[0]]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[reference('linkedStorage').outputs.storageAccountIds.value[0]]"
+                    }
+                }
             }
         }
     ]

@@ -4,26 +4,50 @@
     "parameters": {
         "storageAccountName": {
             "type": "string",
-            "defaultValue": "az104Storage"
+            "defaultValue": "yzstorage93211"
+        },
+        "numberOfStorage": {
+            "type": "int",
+            "defaultValue": 1
+        },
+        "storageSku": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Premium_LRS",
+                "Premium_ZRS",
+                "Standard_GRS",
+                "Standard_GZRS",
+                "Standard_LRS",
+                "Standard_RAGRS",
+                "Standard_RAGZRS",
+                "Standard_ZRS"
+            ]
         }
     },
     "resources": [
         {
-            "name": "[parameters('storageAccountName')]",
+            "name": "[concat(parameters('storageAccountName'), copyIndex(1))]",
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2021-04-01",
             "location": "[resourceGroup().location]",
             "kind": "StorageV2",
             "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
+                "name": "[parameters('storageSku')]"
+            },
+            "copy": {
+                "name": "copyStorageAccount",
+                "count": "[parameters('numberOfStorage')]"
             }
         }
     ],
     "outputs": {
-        "storageAccountId": {
-            "type": "string",
-            "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+        "storageAccountIds": {
+            "type": "array",
+            "copy": {
+                "count": "[parameters('numberOfStorage')]",
+                "input": "[reference(concat(parameters('storageAccountName'), copyIndex(1))).primaryEndpoints.blob]"
+            }
         }
     }
 }
