@@ -9,6 +9,9 @@
         "numberOfVm": {
             "type": "int",
             "defaultValue": 1
+        },
+        "adminpassword": {
+            "type": "securestring"
         }
     },
     "resources": [
@@ -57,7 +60,7 @@
                 "osProfile": {
                     "computerName": "windowsVM1",
                     "adminUsername": "yzhu",
-                    "adminPassword": "Insuit-46-meant-29"
+                    "adminPassword": "[parameters('adminpassword')]"
                 },
                 "storageProfile": {
                     "imageReference": {
