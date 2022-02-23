@@ -4,7 +4,7 @@
     "parameters": {
         "vmname": {
             "type": "string",
-            "defaultValue": "az104-07-vm0"
+            "defaultValue": "az104-07-vm"
         },
         "vmadminuser" : {
             "type": "string",
@@ -15,7 +15,12 @@
         }
     },
     "functions": [],
-    "variables": {},
+    "variables": {
+        "VmInterfaceName": "[concat(parameters('vmname'),'-NetworkInterface')]",
+        "VmPublicIpName": "[concat(parameters('vmname'),'-PublicIP')]",
+        "VmNetworkSecureGroupName": "[concat(parameters('vmname'), '-Nsg')]",
+        "VmDomainNameLabel": "[toLower(concat(parameters('vmname'), 'yz092'))]"
+    },
     "resources": [
         {
             "name": "az104-05-vnet0",
@@ -39,22 +44,7 @@
             }
         },
         {
-            "name": "[concat(parameters('vmname'),'-PublicIP')]",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2020-11-01",
-            "location": "[resourceGroup().location]",
-            "tags": {
-                "displayName": "PublicIPAddress"
-            },
-            "properties": {
-                "publicIPAllocationMethod": "Dynamic",
-                "dnsSettings": {
-                    "domainNameLabel": "[toLower(concat(parameters('vmname'), 'yz092'))]"
-                }
-            }
-        },
-        {
-            "name": "[concat(parameters('vmname'),'-Nsg')]",
+            "name": "[variables('VmNetworkSecureGroupName')]",
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2020-11-01",
             "location": "[resourceGroup().location]",
@@ -78,17 +68,29 @@
             }
         },
         {
-            "name": "[concat(parameters('vmname'),'-NetworkInterface')]",
+            "name": "[variables('VmPublicIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "PublicIPAddress"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('VmDomainNameLabel')]"
+                }
+            }
+        },
+        {
+            "name": "[variables('VmInterfaceName')]",
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2020-11-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', 'windowsVM1-PublicIP')]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('VmPublicIpName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', 'az104-05-vnet0')]"
             ],
-            "tags": {
-                "displayName": "windowsVM1 Network Interface"
-            },
             "properties": {
                 "ipConfigurations": [
                     {
@@ -96,7 +98,7 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmname'),'-PublicIP'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('VmPublicIpName'))]"
                             },
                             "subnet": {
                                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'az104-05-vnet0', 'Subnet0')]"
@@ -105,7 +107,7 @@
                     }
                 ],
                 "networkSecurityGroup": {
-                    "Id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('vmname'),'-Nsg'))]"
+                    "Id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('VmNetworkSecureGroupName'))]"
                 }
             }
         },
@@ -115,7 +117,7 @@
             "apiVersion": "2021-03-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', 'windowsVM1-NetworkInterface')]"
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('VmInterfaceName'))]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -134,7 +136,7 @@
                         "version": "latest"
                     },
                     "osDisk": {
-                        "name": "[concat(parameters('vmname'), 'OSDisk')]",
+                        "name": "[concat(parameters('vmname'), '-OSDisk')]",
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
                     }
@@ -142,7 +144,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmname'),'-NetworkInterface'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('VmInterfaceName'))]"
                         }
                     ]
                 }
