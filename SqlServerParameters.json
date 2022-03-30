@@ -10,8 +10,14 @@
                 "secretName": "DbAdminPassword"
             }
         },
-        "servername": {
+        "sqlservername": {
             "value": "yzdatahost"
+        },
+        "dbadmin": {
+            "value": "dbadmin"
+        },
+        "dbname": {
+            "value": "partsunlimited"
         }
     }
 }
