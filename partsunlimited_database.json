@@ -2,6 +2,19 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "dbadmin": {
+            "type": "string",
+            "defaultValue": "dbadmin",
+            "metadata": {
+                "description": "Database administrator"
+            }
+        },
+        "dbadminpassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Database admin password"
+            }
+        },
         "sqlservername": {
             "type": "string",
             "metadata": {
@@ -15,26 +28,49 @@
             }
         }
     },
-    "variables": {
-        "ServerPrfix": "[concat(parameters('sqlservername'), '/')]"
-    },
     "resources": [
         {
-            "name": "[concat(variables('ServerPrfix'), parameters('dbname'))]",
-            "type": "Microsoft.Sql/servers/databases",
-            "apiVersion": "2014-04-01",
+            "name": "[parameters('sqlservername')]",
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2020-11-01-preview",
             "location": "[resourceGroup().location]",
-            "sku": {
-                "name": "Basic",
-                "tier": "Basic"
+            "tags": {
+                "displayName": "[parameters('sqlservername')]"
             },
             "properties": {
-                "collation": "SQL_Latin1_General_CP1_CI_AS",
-                "edition": "Basic",
-                "maxSizeBytes": "1073741824",
-                "requestedServiceObjectiveName": "Basic"
-            }
+                "administratorLogin": "[parameters('dbadmin')]",
+                "administratorLoginPassword": "[parameters('dbadminpassword')]"
+            },
+            "resources": [
+                {
+                    "type": "firewallRules",
+                    "apiVersion": "2020-11-01-preview",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Sql/servers', parameters('sqlservername'))]"
+                    ],
+                    "location": "[resourceGroup().location]",
+                    "name": "AllowAllWindowsAzureIps",
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    }
+                },
+                {
+                    "name": "[parameters('dbname')]",
+                    "type": "databases",
+                    "apiVersion": "2020-11-01-preview",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Sql/servers', parameters('sqlservername'))]"
+                    ],
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                        "collation": "SQL_Latin1_General_CP1_CI_AS",
+                        "edition": "Basic",
+                        "maxSizeBytes": 1073741824,
+                        "requestedServiceObjectiveName": "Basic"
+                    }
+                }
+            ]
         }
-    ],
-    "outputs": {}
+    ]
 }
