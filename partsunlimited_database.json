@@ -1,0 +1,40 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sqlservername": {
+            "type": "string",
+            "metadata": {
+                "description": "name for sql server"
+            }
+        },
+        "dbname": {
+            "type": "string",
+            "metadata": {
+                "description": "name of the database"
+            }
+        }
+    },
+    "variables": {
+        "ServerPrfix": "[concat(parameters('sqlservername'), '/')]"
+    },
+    "resources": [
+        {
+            "name": "[concat(variables('ServerPrfix'), parameters('dbname'))]",
+            "type": "Microsoft.Sql/servers/databases",
+            "apiVersion": "2014-04-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic",
+                "tier": "Basic"
+            },
+            "properties": {
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "edition": "Basic",
+                "maxSizeBytes": "1073741824",
+                "requestedServiceObjectiveName": "Basic"
+            }
+        }
+    ],
+    "outputs": {}
+}

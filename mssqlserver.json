@@ -4,6 +4,7 @@
     "parameters": {
         "dbadmin": {
             "type": "string",
+            "defaultValue": "dbadmin",
             "metadata": {
                 "description": "Database administrator"
             }
@@ -13,10 +14,6 @@
             "metadata": {
                 "description": "Database admin password"
             }
-        },
-        "dbname": {
-            "type": "string",
-            "defaultValue": "PartsUnlimited"
         },
         "servername": {
             "type": "string"
@@ -29,7 +26,7 @@
             "apiVersion": "2014-04-01",
             "location": "[resourceGroup().location]",
             "tags": {
-                "displayName": "sqlServer1"
+                "displayName": "[parameters('servername')]"
             },
             "properties": {
                 "administratorLogin": "[parameters('dbadmin')]",
@@ -50,24 +47,6 @@
                     }
                 }
             ]
-        },
-        {
-            "name": "[concat(parameters('servername'), '/', parameters('dbname'))]",
-            "type": "Microsoft.Sql/servers/databases",
-            "apiVersion": "2014-04-01",
-            "location": "[resourceGroup().location]",
-            "tags": {
-                "displayName": "[parameters('dbname')]"
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Sql/servers', parameters('servername'))]"
-            ],
-            "properties": {
-                "collation": "SQL_Latin1_General_CP1_CI_AS",
-                "edition": "Basic",
-                "maxSizeBytes": "1073741824",
-                "requestedServiceObjectiveName": "Basic"
-            }
         }
     ],
     "outputs": {}
