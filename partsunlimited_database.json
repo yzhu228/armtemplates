@@ -63,11 +63,17 @@
                         "[resourceId('Microsoft.Sql/servers', parameters('sqlservername'))]"
                     ],
                     "location": "[resourceGroup().location]",
+                    "sku": {
+                        "name": "GP_S_Gen5",
+                        "tier": "GeneralPurpose",
+                        "family": "Gen5",
+                        "capacity": 1
+                    },
+                    "kind": "v12.0,user,vcore,serverless",
                     "properties": {
                         "collation": "SQL_Latin1_General_CP1_CI_AS",
-                        "edition": "Basic",
                         "maxSizeBytes": 1073741824,
-                        "requestedServiceObjectiveName": "Basic"
+                        "autoPauseDelay": 60
                     }
                 }
             ]
