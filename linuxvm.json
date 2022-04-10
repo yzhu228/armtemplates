@@ -1,300 +1,230 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "networkInterfaces_az104LinuxVmNic_name": {
-      "defaultValue": "az104LinuxVmNic",
-      "type": "String"
-    },
-    "networkSecurityGroups_az104VmSecurityGroup_name": {
-      "defaultValue": "az104VmSecurityGroup",
-      "type": "String"
-    },
-    "publicIPAddresses_linuxvmIp_name": {
-      "defaultValue": "linuxvmIp",
-      "type": "String"
-    },
-    "sshPublicKeys_mysshkey_name": {
-      "defaultValue": "mysshkey",
-      "type": "String"
-    },
-    "virtualMachines_linuxvm_name": {
-      "defaultValue": "linuxvm",
-      "type": "String"
-    },
-    "virtualNetworks_az104Vnet_name": {
-      "defaultValue": "az104Vnet",
-      "type": "String"
-    }
-  },
-  "resources": [
-    {
-      "apiVersion": "2021-07-01",
-      "location": "australiasoutheast",
-      "name": "[parameters('sshPublicKeys_mysshkey_name')]",
-      "properties": {
-        "publicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCi4C+08gSn+GQPaeVwSi/J+O4V\r\nf/CB5NuhZv8IxXMpKIsfuQgTifVQRG+P+3b3yXS0M8IOP5S0rZAKdkIdRVYF81aS\r\nCiMkPxtX+eXoNd7FyI6W7UjSorDf7eqJewU+6EJik7EjttCGD1VDUbPR6JeZnbCq\r\nh/x4lb5VfYz0czU0916uBNdvd4GO0DOFb8NPHhpdandpntNfXIltRekLDj4QERKS\r\njU3QPXWC5IJeQJlTpbsPd7h0XmYk5px9E+IPPXom011AhGkFp47N8shpsHS3QPro\r\ntDLLygWWwIOHIUooBDrVpasL8kehFLuGSEmQcllT+VdvqfTqoL7oJKmKu3KpO6MN\r\n+zwasBADLdDfZskTKJ8JsSvT6aAylIv5OVJ8Hcw6/1+AA0mDr7jVbCP05EEA/ZVE\r\nPPzWIakkQuNjkQHZdTlRtgFP2wjv1hDXdu9JpVlzb/WSGXBnk5EcfNJavUDHMeWY\r\nlm+SUY4otgxn4LwokfoXbM9oOWWHmcBxSd5mbV0= generated-by-azure\r\n"
-      },
-      "type": "Microsoft.Compute/sshPublicKeys"
-    },
-    {
-      "apiVersion": "2020-11-01",
-      "location": "australiasoutheast",
-      "name": "[parameters('networkSecurityGroups_az104VmSecurityGroup_name')]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "[concat(parameters('networkSecurityGroups_az104VmSecurityGroup_name'), 'RuleSSH')]",
-            "properties": {
-              "access": "Allow",
-              "destinationAddressPrefix": "*",
-              "destinationAddressPrefixes": [],
-              "destinationPortRange": "22",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 1000,
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourceAddressPrefixes": [],
-              "sourcePortRange": "*",
-              "sourcePortRanges": []
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUser": {
+            "type": "string",
+            "metadata": {
+                "description": "Admin username for the VM"
             }
-          },
-          {
-            "name": "[concat(parameters('networkSecurityGroups_az104VmSecurityGroup_name'), 'RuleWeb')]",
-            "properties": {
-              "access": "Allow",
-              "destinationAddressPrefix": "*",
-              "destinationAddressPrefixes": [],
-              "destinationPortRange": "80",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 1010,
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourceAddressPrefixes": [],
-              "sourcePortRange": "*",
-              "sourcePortRanges": []
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Admin user password"
             }
-          }
-        ]
-      },
-      "type": "Microsoft.Network/networkSecurityGroups"
-    },
-    {
-      "apiVersion": "2020-11-01",
-      "location": "australiasoutheast",
-      "name": "[parameters('publicIPAddresses_linuxvmIp_name')]",
-      "properties": {
-        "dnsSettings": {
-          "domainNameLabel": "linuxvm",
-          "fqdn": "linuxvm.australiasoutheast.cloudapp.azure.com"
         },
-        "idleTimeoutInMinutes": 4,
-        "ipAddress": "40.127.81.42",
-        "ipTags": [],
-        "publicIPAddressVersion": "IPv4",
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "sku": {
-        "name": "Basic",
-        "tier": "Regional"
-      },
-      "type": "Microsoft.Network/publicIPAddresses"
-    },
-    {
-      "apiVersion": "2020-11-01",
-      "location": "australiasoutheast",
-      "name": "[parameters('virtualNetworks_az104Vnet_name')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "192.168.0.0/16"
-          ]
-        },
-        "dhcpOptions": {
-          "dnsServers": []
-        },
-        "enableDdosProtection": false,
-        "subnets": [
-          {
-            "name": "az104Subnet",
-            "properties": {
-              "addressPrefix": "192.168.1.0/24",
-              "delegations": [],
-              "privateEndpointNetworkPolicies": "Enabled",
-              "privateLinkServiceNetworkPolicies": "Enabled"
+        "adminSSH": {
+            "type": "string",
+            "metadata": {
+                "description": "Admin user public key"
             }
-          }
-        ],
-        "virtualNetworkPeerings": []
-      },
-      "type": "Microsoft.Network/virtualNetworks"
-    },
-    {
-      "apiVersion": "2021-07-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_az104LinuxVmNic_name'))]"
-      ],
-      "location": "australiasoutheast",
-      "name": "[parameters('virtualMachines_linuxvm_name')]",
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "Standard_DS1_v2"
         },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_az104LinuxVmNic_name'))]",
-              "properties": {
-                "primary": true
-              }
+        "hostName": {
+            "type": "string",
+            "metadata": {
+                "description": "VM host name"
             }
-          ]
         },
-        "osProfile": {
-          "adminUsername": "yzhu",
-          "allowExtensionOperations": true,
-          "computerName": "[parameters('virtualMachines_linuxvm_name')]",
-          "linuxConfiguration": {
-            "disablePasswordAuthentication": true,
-            "patchSettings": {
-              "assessmentMode": "ImageDefault",
-              "patchMode": "ImageDefault"
+        "hostSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "VM's SKU"
             },
-            "provisionVMAgent": true,
-            "ssh": {
-              "publicKeys": [
-                {
-                  "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCi4C+08gSn+GQPaeVwSi/J+O4V\r\nf/CB5NuhZv8IxXMpKIsfuQgTifVQRG+P+3b3yXS0M8IOP5S0rZAKdkIdRVYF81aS\r\nCiMkPxtX+eXoNd7FyI6W7UjSorDf7eqJewU+6EJik7EjttCGD1VDUbPR6JeZnbCq\r\nh/x4lb5VfYz0czU0916uBNdvd4GO0DOFb8NPHhpdandpntNfXIltRekLDj4QERKS\r\njU3QPXWC5IJeQJlTpbsPd7h0XmYk5px9E+IPPXom011AhGkFp47N8shpsHS3QPro\r\ntDLLygWWwIOHIUooBDrVpasL8kehFLuGSEmQcllT+VdvqfTqoL7oJKmKu3KpO6MN\r\n+zwasBADLdDfZskTKJ8JsSvT6aAylIv5OVJ8Hcw6/1+AA0mDr7jVbCP05EEA/ZVE\r\nPPzWIakkQuNjkQHZdTlRtgFP2wjv1hDXdu9JpVlzb/WSGXBnk5EcfNJavUDHMeWY\r\nlm+SUY4otgxn4LwokfoXbM9oOWWHmcBxSd5mbV0= generated-by-azure\r\n",
-                  "path": "/home/yzhu/.ssh/authorized_keys"
+            "defaultValue": "Standard_A2_v2",
+            "allowedValues": [
+                "Standard_B1s",
+                "Standard_A2_v2",
+                "Standard_D2_v2"
+            ]
+        }
+    },
+    "functions": [],
+    "variables": {
+        "dnsNamePrefix": "yz",
+        "networkInterfaceName": "[concat(parameters('hostName'), '-NetworkInterface')]",
+        "publicIPAddressName": "[concat(parameters('hostName'), '-PublicIP')]",
+        "virtualNetworkName": "[concat(parameters('hostName'), '-VirtualNetwork')]",
+        "subnetName": "[concat(parameters('hostName'), '-VirtualNetwork-Subnet')]",
+        "securityGroupName": "[concat(parameters('hostName'), '-nsg')]",
+        "vmStorageAccountName": "[toLower(concat(variables('dnsNamePrefix'), parameters('hostName'), 'storage'))]",
+        "useSSH": "[not(empty(parameters('adminSSH')))]"
+    },
+    "resources": [
+        {
+            "name": "[variables('vmStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[concat(parameters('hostName'), 'storage account')]"
+            },
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "kind": "Storage"
+        },
+        {
+            "name": "[variables('publicIPAddressName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[variables('publicIPAddressName')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(variables('dnsNamePrefix'), parameters('hostName'))]"
                 }
-              ]
             }
-          },
-          "requireGuestProvisionSignal": true,
-          "secrets": []
         },
-        "storageProfile": {
-          "dataDisks": [],
-          "imageReference": {
-            "offer": "UbuntuServer",
-            "publisher": "Canonical",
-            "sku": "18.04-LTS",
-            "version": "latest"
-          },
-          "osDisk": {
-            "caching": "ReadWrite",
-            "createOption": "FromImage",
-            "deleteOption": "Detach",
-            "diskSizeGB": 30,
-            "managedDisk": {
-              "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_linuxvm_name'), '_OsDisk_1_cea3862289e64b82b23cdaf7e46665b8'))]",
-              "storageAccountType": "Premium_LRS"
-            },
-            "name": "[concat(parameters('virtualMachines_linuxvm_name'), '_OsDisk_1_cea3862289e64b82b23cdaf7e46665b8')]",
-            "osType": "Linux"
-          }
-        }
-      },
-      "type": "Microsoft.Compute/virtualMachines"
-    },
-    {
-      "apiVersion": "2020-11-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_az104VmSecurityGroup_name'))]"
-      ],
-      "name": "[concat(parameters('networkSecurityGroups_az104VmSecurityGroup_name'), '/', parameters('networkSecurityGroups_az104VmSecurityGroup_name'), 'RuleSSH')]",
-      "properties": {
-        "access": "Allow",
-        "destinationAddressPrefix": "*",
-        "destinationAddressPrefixes": [],
-        "destinationPortRange": "22",
-        "destinationPortRanges": [],
-        "direction": "Inbound",
-        "priority": 1000,
-        "protocol": "Tcp",
-        "sourceAddressPrefix": "*",
-        "sourceAddressPrefixes": [],
-        "sourcePortRange": "*",
-        "sourcePortRanges": []
-      },
-      "type": "Microsoft.Network/networkSecurityGroups/securityRules"
-    },
-    {
-      "apiVersion": "2020-11-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_az104VmSecurityGroup_name'))]"
-      ],
-      "name": "[concat(parameters('networkSecurityGroups_az104VmSecurityGroup_name'), '/', parameters('networkSecurityGroups_az104VmSecurityGroup_name'), 'RuleWeb')]",
-      "properties": {
-        "access": "Allow",
-        "destinationAddressPrefix": "*",
-        "destinationAddressPrefixes": [],
-        "destinationPortRange": "80",
-        "destinationPortRanges": [],
-        "direction": "Inbound",
-        "priority": 1010,
-        "protocol": "Tcp",
-        "sourceAddressPrefix": "*",
-        "sourceAddressPrefixes": [],
-        "sourcePortRange": "*",
-        "sourcePortRanges": []
-      },
-      "type": "Microsoft.Network/networkSecurityGroups/securityRules"
-    },
-    {
-      "apiVersion": "2020-11-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_az104Vnet_name'))]"
-      ],
-      "name": "[concat(parameters('virtualNetworks_az104Vnet_name'), '/az104Subnet')]",
-      "properties": {
-        "addressPrefix": "192.168.1.0/24",
-        "delegations": [],
-        "privateEndpointNetworkPolicies": "Enabled",
-        "privateLinkServiceNetworkPolicies": "Enabled"
-      },
-      "type": "Microsoft.Network/virtualNetworks/subnets"
-    },
-    {
-      "apiVersion": "2020-11-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_linuxvmIp_name'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_az104Vnet_name'), 'az104Subnet')]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_az104VmSecurityGroup_name'))]"
-      ],
-      "location": "australiasoutheast",
-      "name": "[parameters('networkInterfaces_az104LinuxVmNic_name')]",
-      "properties": {
-        "dnsSettings": {
-          "dnsServers": []
-        },
-        "enableAcceleratedNetworking": false,
-        "enableIPForwarding": false,
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
+        {
+            "name": "[variables('securityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
             "properties": {
-              "primary": true,
-              "privateIPAddress": "192.168.1.4",
-              "privateIPAddressVersion": "IPv4",
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_linuxvmIp_name'))]"
-              },
-              "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_az104Vnet_name'), 'az104Subnet')]"
-              }
+                "securityRules": [
+                    {
+                        "name": "nsgRule1",
+                        "properties": {
+                            "description": "description",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
             }
-          }
-        ],
-        "networkSecurityGroup": {
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_az104VmSecurityGroup_name'))]"
+        },
+        {
+            "name": "[variables('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('securityGroupName'))]"
+            ],
+            "tags": {
+                "displayName": "[variables('virtualNetworkName')]"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.12.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "10.12.0.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('securityGroupName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[variables('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+            ],
+            "tags": {
+                "displayName": "[variables('networkInterfaceName')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('hostName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-03-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('vmStorageAccountName'))]"
+            ],
+            "tags": {
+                "displayName": "[parameters('hostName')]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('hostSKU')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('hostName')]",
+                    "adminUsername": "[parameters('adminUser')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": "[variables('useSSH')]",
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "keyData": "[parameters('adminSSH')]",
+                                    "path": "[concat('/home/', parameters('adminUser'),'/.ssh/authorized_keys')]"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('hostName'), '-OSDisk')]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('vmStorageAccountName'))).primaryEndpoints.blob]"
+                    }
+                }
+            }
         }
-      },
-      "type": "Microsoft.Network/networkInterfaces"
-    }
-  ],
-  "variables": {}
+    ],
+    "outputs": {}
 }
