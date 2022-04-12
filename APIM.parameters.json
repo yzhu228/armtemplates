@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiManagementServiceName": {
+            "value": "yzapigateway"
+        },
+        "publisherEmail": {
+            "value": "zuer@zhusmelb.com"
+        },
+        "publisherName": {
+            "value": "Yu Zhu"
+        },
+        "sku": {
+            "value": "Standard"
+        },
+        "skuCount": {
+            "value": 1
+        },
+        "location": {
+            "value": "australiaeast"
+        }
+    }
+}

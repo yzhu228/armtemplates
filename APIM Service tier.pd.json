@@ -1,0 +1,33 @@
+{
+  "policyType": "Custom",
+  "mode": "All",
+  "displayName": "APIM Service tier",
+  "policyRule": {
+    "if": {
+      "field": "Microsoft.ApiManagement/service/sku",
+      "notIn": "[parameters('allowedSkus')]"
+    },
+    "then": {
+      "effect": "deny"
+    }
+  },
+  "metadata": {
+    "category": "API Management",
+    "createdBy": "7cbaf9bd-7db9-4765-9422-afeaa094c597",
+    "createdOn": "2022-04-12T03:40:21.0888675Z",
+    "updatedBy": null,
+    "updatedOn": null
+  },
+  "parameters": {
+    "allowedSkus": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Allowed SKU",
+        "description": "The list of allowed sku for API-M resources."
+      }
+    }
+  },
+  "id": "/subscriptions/cfa2b6fd-8dff-46ab-a121-6f4e0819299f/providers/Microsoft.Authorization/policyDefinitions/ef9e80e6-302a-4af1-a535-7ad69cc770b5",
+  "name": "ef9e80e6-302a-4af1-a535-7ad69cc770b5",
+  "type": "Microsoft.Authorization/policyDefinitions"
+}
