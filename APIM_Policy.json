@@ -15,7 +15,7 @@
         "policyRule": {
             "if": {
                 "not": {
-                    "field": "Microsoft.ApiManagement/service/sku",
+                    "field": "Microsoft.ApiManagement/service/sku.name",
                     "in": "[parameters('allowedSkus')]"
                 }
             },
