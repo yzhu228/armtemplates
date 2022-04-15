@@ -1,6 +1,8 @@
+param vmHostName string
+
 param vnetName string
 param subnetName string
-param vmHostName string
+param vnetRg string = resourceGroup().name
 
 param adminUsername string
 @secure()
@@ -9,7 +11,8 @@ param adminPassword string
 @allowed([
   'Standard_A2_v2'
 ])
-param sku string
+param sku string = 'Standard_A2_v2'
+
 param location string = resourceGroup().location
 
 var storageName = toLower('yz${vmHostName}storage')
@@ -22,7 +25,7 @@ resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
   location: location
   kind: 'StorageV2'
   sku: {
-    name: 'Premium_LRS'
+    name: 'Standard_LRS'
   }
 }
 
@@ -45,32 +48,33 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
       {
         name: ipconfigName
         properties: {
-          publicIPAddress: publicIPAddress
+          publicIPAddress: {
+            id: publicIPAddress.id
+          }
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnetName)
+            id: resourceId(vnetRg, 'Microsoft.Network/virtualNetworks/subnets', vnetName, subnetName)
           }
         }
       }
     ]
-    //networkSecurityGroup: reference(resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnetName)).properties
   }
 }
 
-resource networkSecurityGroupSecurityRule 'Microsoft.Network/networkSecurityGroups/securityRules@2019-11-01' = {
-  name: 'networkSecurityGroup/name'
-  properties: {
-    description: 'description'
-    protocol: '*'
-    sourcePortRange: 'sourcePortRange'
-    destinationPortRange: 'destinationPortRange'
-    sourceAddressPrefix: 'sourceAddressPrefix'
-    destinationAddressPrefix: 'destinationAddressPrefix'
-    access: 'Allow'
-    priority: 100
-    direction: 'Inbound'
-  }
-}
+// resource networkSecurityGroupSecurityRule 'Microsoft.Network/networkSecurityGroups/securityRules@2019-11-01' = {
+//   name: 'networkSecurityGroup/name'
+//   properties: {
+//     description: 'description'
+//     protocol: '*'
+//     sourcePortRange: 'sourcePortRange'
+//     destinationPortRange: 'destinationPortRange'
+//     sourceAddressPrefix: 'sourceAddressPrefix'
+//     destinationAddressPrefix: 'destinationAddressPrefix'
+//     access: 'Allow'
+//     priority: 100
+//     direction: 'Inbound'
+//   }
+// }
 
 resource windowsVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: vmHostName
@@ -88,11 +92,11 @@ resource windowsVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       imageReference: {
         publisher: 'MicrosoftWindowsServer'
         offer: 'WindowsServer'
-        sku: '2012-R2-Datacenter'
+        sku: '2019-Datacenter'
         version: 'latest'
       }
       osDisk: {
-        name: 'name'
+        name: '${vmHostName}-osdisk'
         caching: 'ReadWrite'
         createOption: 'FromImage'
       }

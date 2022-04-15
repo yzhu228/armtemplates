@@ -2,17 +2,24 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "VnetName": {
+        "vnetName": {
             "type": "string",
             "metadata": {
                 "description": "VNet in which this VM resides"
             }
         },
-        "SubnetName": {
+        "subnetName": {
             "type": "string",
             "metadata": {
                 "description": "Subnet in which this VM resides"
             }
+        },
+        "vnetRg": {
+            "type": "string",
+            "metadata": {
+                "description": "ResourceGroup name to which this vnet belongs"
+            },
+            "defaultValue": "[resourceGroup().name]"
         }
     },
     "resources": [
@@ -89,7 +96,7 @@
                         },
                         "privateIPAllocationMethod": "Dynamic",
                         "subnet": {
-                            "id": "[resourceId('az104', 'Microsoft.Network/virtualNetworks/subnets', parameters('VnetName'), parameters('SubnetName'))]"
+                            "id": "[resourceId(parameters('vnetRg'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
                         }
                     }
                 }
