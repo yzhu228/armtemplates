@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetName": {
+            "value": "az104-vnet-devnet"
+        },
+        "addressSpaces": {
+            "value": "10.0.0.0/16"
+        },
+        "subnets": {
+            "value": [
+                {
+                    "name": "web-subnet",
+                    "addressPrefix": "10.0.1.0/24"
+                },
+                {
+                    "name": "app-subnet",
+                    "addressPrefix": "10.0.2.0/24"
+                },
+                {
+                    "name": "db-subnet",
+                    "addressPrefix": "10.0.3.0/24"
+                }
+            ]
+        }
+    }
+}
