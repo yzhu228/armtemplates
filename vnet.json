@@ -57,14 +57,32 @@
             }
         },
         {
+            "name": "[concat(parameters('subnets')[copyIndex()].name, '-nsg')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-11-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": [
+                ]
+            },
+            "copy": {
+                "name": "nsgCopy",
+                "count": "[length(parameters('subnets'))]"
+            }
+        },
+        {
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "apiVersion": "2020-11-01",
             "name": "[concat(parameters('vnetName'), '/', parameters('subnets')[copyIndex()].name)]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+                "[concat(parameters('subnets')[copyIndex()].name, '-nsg')]"
             ],
             "properties": {
-                "addressPrefix": "[parameters('subnets')[copyIndex()].addressPrefix]"
+                "addressPrefix": "[parameters('subnets')[copyIndex()].addressPrefix]",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('subnets')[copyIndex()].name, '-nsg'))]"
+                }
             },
             "copy": {
                 "name": "subnetCopy",
