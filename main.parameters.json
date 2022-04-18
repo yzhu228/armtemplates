@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetRgName": {
+            "value": "az104-vnet"
+        },
+        "vmRgName": {
+            "value": "az104-vm"
+        },
+        "vmConfig": {
+            "value": {
+                "vnetName": "az104-vnet-devnet",
+                "subnetName": "web-subnet",
+                "adminUsername": "yzhu",
+                "vmHostName": "winsvm"
+            }
+        },
+        "vmAdminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/a272041c-6a2a-46cb-b7d3-8fe5200d48c0/resourceGroups/az104lt/providers/Microsoft.KeyVault/vaults/az104Vault0982"
+                },
+                "secretName": "VmAdminPassword"
+            }
+        }
+    }
+}

@@ -20,137 +20,175 @@
                 "description": "ResourceGroup name to which this vnet belongs"
             },
             "defaultValue": "[resourceGroup().name]"
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Username for admin"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for admin"
+            }
+        },
+        "vmHostName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name prefix of the VM"
+            }
+        },
+        "setupBuildTools": {
+            "type": "bool",
+            "metadata": {
+                "description": "Should an extension be setup for build tools and IIS"
+            },
+            "defaultValue": false
         }
+    },
+    "variables": {
+        "publicIpName": "[format('{0}-PublicIP', parameters('vmHostName'))]",
+        "pipDomainName": "[format('yz-{0}-{1}',parameters('vmHostName'), uniqueString(resourceGroup().id))]",
+        "storageAccountName": "[toLower(format('yz{0}storage', parameters('vmHostName')))]",
+        "shouldSetupBuildTool": "[parameters('setupBuildTools')]"
     },
     "resources": [
-    {
-        "name": "[toLower('yzwinvmstorage')]",
-        "type": "Microsoft.Storage/storageAccounts",
-        "apiVersion": "2021-04-01",
-        "location": "[resourceGroup().location]",
-        "tags": {
-            "displayName": "windowsVM1 Storage Account"
+        {
+            "name": "[variables('storageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "windowsVM1 Storage Account"
+            },
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "kind": "Storage"
         },
-        "sku": {
-            "name": "Standard_LRS"
-        },
-        "kind": "Storage"
-    },
-    {
-        "name": "windowsVM1-PublicIP",
-        "type": "Microsoft.Network/publicIPAddresses",
-        "apiVersion": "2020-11-01",
-        "location": "[resourceGroup().location]",
-        "tags": {
-            "displayName": "PublicIPAddress"
-        },
-        "properties": {
-            "publicIPAllocationMethod": "Dynamic",
-            "dnsSettings": {
-                "domainNameLabel": "[toLower('yz-winvm9893')]"
-            }
-        }
-    },
-    {
-        "name": "windowsVM1-nsg",
-        "type": "Microsoft.Network/networkSecurityGroups",
-        "apiVersion": "2020-11-01",
-        "location": "[resourceGroup().location]",
-        "properties": {
-            "securityRules": [
-                {
-                    "name": "nsgRule1",
-                    "properties": {
-                        "description": "description",
-                        "protocol": "Tcp",
-                        "sourcePortRange": "*",
-                        "destinationPortRange": "3389",
-                        "sourceAddressPrefix": "*",
-                        "destinationAddressPrefix": "*",
-                        "access": "Allow",
-                        "priority": 100,
-                        "direction": "Inbound"
-                    }
+        {
+            "name": "[variables('publicIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "PublicIPAddress"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('pipDomainName')]"
                 }
-            ]
-        }
-    },
-    {
-        "name": "yz-az104-nic0",
-        "type": "Microsoft.Network/networkInterfaces",
-        "apiVersion": "2020-11-01",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-            "[resourceId('Microsoft.Network/publicIPAddresses', 'windowsVM1-PublicIP')]"
-        ],
-        "tags": {
-            "displayName": "windowsVM1 Network Interface"
+            }
         },
-        "properties": {
-            "ipConfigurations": [
-                {
-                    "name": "ipConfig1",
-                    "properties": {
-                        "publicIPAddress": {
-                            "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'windowsVM1-PublicIP')]"
-                        },
-                        "privateIPAllocationMethod": "Dynamic",
-                        "subnet": {
-                            "id": "[resourceId(parameters('vnetRg'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
+        {
+            "name": "yz-az104-nic0",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
+            ],
+            "tags": {
+                "displayName": "windowsVM1 Network Interface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId(parameters('vnetRg'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
+                            }
                         }
                     }
-                }
-            ]
-        }
-    },
-    {
-        "name": "windowsVM1",
-        "type": "Microsoft.Compute/virtualMachines",
-        "apiVersion": "2021-03-01",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-            "[resourceId('Microsoft.Storage/storageAccounts', toLower('yzwinvmstorage'))]",
-            "[resourceId('Microsoft.Network/networkInterfaces', 'yz-az104-nic0')]"
-        ],
-        "tags": {
-            "displayName": "windowsVM1"
-        },
-        "properties": {
-            "hardwareProfile": {
-                "vmSize": "Standard_A2_v2"
-            },
-            "osProfile": {
-                "computerName": "windowsVM1",
-                "adminUsername": "yzhu",
-                "adminPassword": "Insuit-46-meant-29"
-            },
-            "storageProfile": {
-                "imageReference": {
-                    "publisher": "MicrosoftWindowsServer",
-                    "offer": "WindowsServer",
-                    "sku": "2012-R2-Datacenter",
-                    "version": "latest"
-                },
-                "osDisk": {
-                    "name": "windowsVM1OSDisk",
-                    "caching": "ReadWrite",
-                    "createOption": "FromImage"
-                }
-            },
-            "networkProfile": {
-                "networkInterfaces": [
-                    {
-                        "id": "[resourceId('Microsoft.Network/networkInterfaces', 'yz-az104-nic0')]"
-                    }
                 ]
+            }
+        },
+        {
+            "name": "[parameters('vmHostName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-03-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', 'yz-az104-nic0')]"
+            ],
+            "tags": {
+                "displayName": "[parameters('vmHostName')]"
             },
-            "diagnosticsProfile": {
-                "bootDiagnostics": {
-                    "enabled": true,
-                    "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', toLower('yzwinvmstorage'))).primaryEndpoints.blob]"
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_A2_v2"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmHostName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[format('{0}-osdisk', parameters('vmHostName'))]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'yz-az104-nic0')]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('shouldSetupBuildTool')]",
+            "name": "[format('{0}/customScript1', parameters('vmHostName'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2021-03-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "customScript1 for Windows VM"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmHostName'))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "timestamp": 100,
+                    "commandToExecute": "powershell -ExecutionPolicy Bypass -file main.ps1"
+                },
+                "protectedSettings": {
+                    "fileUris": [
+                        "https://yzhuartifacts.blob.core.windows.net/data/InstallIIS.ps1",
+                        "https://yzhuartifacts.blob.core.windows.net/data/InstallBuildTools.ps1",
+                        "https://yzhuartifacts.blob.core.windows.net/data/main.ps1"
+                    ]
                 }
             }
         }
-    }],
+    ],
     "outputs": {}
 }

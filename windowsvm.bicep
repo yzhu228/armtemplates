@@ -19,7 +19,6 @@ var storageName = toLower('yz${vmHostName}storage')
 var nicName = '${vmHostName}-nic'
 var ipconfigName = '${vmHostName}-ipconfig'
 var publicIpName = '${vmHostName}-pip'
-var rdpRuleName = '${subnetName}-nsg/Port_RDP'
 
 resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
   name: storageName
@@ -59,21 +58,6 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
         }
       }
     ]
-  }
-}
-
-resource networkSecurityGroupSecurityRule 'Microsoft.Network/networkSecurityGroups/securityRules@2019-11-01' = {
-  name: rdpRuleName
-  properties: {
-    description: 'RDP port'
-    protocol: 'Tcp'
-    sourcePortRange: '*'
-    destinationPortRange: '3389'
-    sourceAddressPrefix: '*'
-    destinationAddressPrefix: '*'
-    access: 'Allow'
-    priority: 300
-    direction: 'Inbound'
   }
 }
 
