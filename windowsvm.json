@@ -51,7 +51,8 @@
         "publicIpName": "[format('{0}-PublicIP', parameters('vmHostName'))]",
         "pipDomainName": "[format('yz-{0}-{1}',parameters('vmHostName'), uniqueString(resourceGroup().id))]",
         "storageAccountName": "[toLower(format('yz{0}storage', parameters('vmHostName')))]",
-        "shouldSetupBuildTool": "[parameters('setupBuildTools')]"
+        "shouldSetupBuildTool": "[parameters('setupBuildTools')]",
+        "nicNmae": "[format('{0}-nic', parameters('vmHostName'))]"
     },
     "resources": [
         {
@@ -83,7 +84,7 @@
             }
         },
         {
-            "name": "yz-az104-nic0",
+            "name": "[variables('nicNmae')]",
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2020-11-01",
             "location": "[resourceGroup().location]",
@@ -117,7 +118,7 @@
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-                "[resourceId('Microsoft.Network/networkInterfaces', 'yz-az104-nic0')]"
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('nicNmae'))]"
             ],
             "tags": {
                 "displayName": "[parameters('vmHostName')]"
@@ -147,7 +148,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'yz-az104-nic0')]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicNmae'))]"
                         }
                     ]
                 },
@@ -156,6 +157,9 @@
                         "enabled": true,
                         "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
                     }
+                },
+                "availabilitySet": {
+                    "id": "/subscriptions/a272041c-6a2a-46cb-b7d3-8fe5200d48c0/resourceGroups/az104-lb/providers/Microsoft.Compute/availabilitySets/lbAvailSet"
                 }
             }
         },
