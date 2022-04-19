@@ -48,8 +48,6 @@
         }
     },
     "variables": {
-        "publicIpName": "[format('{0}-PublicIP', parameters('vmHostName'))]",
-        "pipDomainName": "[format('yz-{0}-{1}',parameters('vmHostName'), uniqueString(resourceGroup().id))]",
         "storageAccountName": "[toLower(format('yz{0}storage', parameters('vmHostName')))]",
         "shouldSetupBuildTool": "[parameters('setupBuildTools')]",
         "nicNmae": "[format('{0}-nic', parameters('vmHostName'))]"
@@ -69,28 +67,10 @@
             "kind": "Storage"
         },
         {
-            "name": "[variables('publicIpName')]",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2020-11-01",
-            "location": "[resourceGroup().location]",
-            "tags": {
-                "displayName": "PublicIPAddress"
-            },
-            "properties": {
-                "publicIPAllocationMethod": "Dynamic",
-                "dnsSettings": {
-                    "domainNameLabel": "[variables('pipDomainName')]"
-                }
-            }
-        },
-        {
             "name": "[variables('nicNmae')]",
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2020-11-01",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
-            ],
             "tags": {
                 "displayName": "windowsVM1 Network Interface"
             },
@@ -99,10 +79,8 @@
                     {
                         "name": "ipConfig1",
                         "properties": {
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
-                            },
-                            "privateIPAllocationMethod": "Dynamic",
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "10.0.1.4",
                             "subnet": {
                                 "id": "[resourceId(parameters('vnetRg'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
                             }

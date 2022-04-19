@@ -1,0 +1,101 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+        {
+            "name": "lbFrontEndPip1",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "publicIPAddress1"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "static",
+                "dnsSettings": {
+                    "domainNameLabel": "yz-lb-web"
+                }
+            }
+        },
+        {
+            "name": "loadBalancerExternal1",
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'lbFrontEndPip1')]"
+            ],
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "loadBalancerFrontEnd1",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'lbFrontEndPip1')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "WinPool1",
+                        "properties": {
+                            "loadBalancerBackendAddresses": [
+                                {
+                                    "name": "winsvm",
+                                    "properties": {
+                                        "virtualNetwork": {
+                                            "id": "/subscriptions/a272041c-6a2a-46cb-b7d3-8fe5200d48c0/resourceGroups/az104-vnet/providers/Microsoft.Network/virtualNetworks/az104-vnet-devnet"
+                                        },
+                                        "subnet": {
+                                            "id": "/subscriptions/a272041c-6a2a-46cb-b7d3-8fe5200d48c0/resourceGroups/az104-vnet/providers/Microsoft.Network/virtualNetworks/az104-vnet-devnet/subnets/web-subnet"
+                                        },
+                                        "loadBalancerFrontendIPConfiguration": {
+                                            "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'loadBalancerExternal1', 'loadBalancerFrontEnd1')]"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "WebLbRule",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'loadBalancerExternal1', 'loadBalancerFrontEnd1')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'loadBalancerExternal1', 'WinPool1')]"
+                            },
+                            "probe": {
+                                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', 'loadBalancerExternal1', 'ProbA')]"
+                            },
+                            "protocol": "Tcp",
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "ProbA",
+                        "properties": {
+                            "port": 80,
+                            "protocol": "Tcp",
+                            "intervalInSeconds": 10,
+                            "numberOfProbes": 2
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
