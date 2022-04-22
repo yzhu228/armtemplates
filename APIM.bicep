@@ -20,6 +20,38 @@ param skuCount int = 1
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
+var testerApisPolicy = '''
+<policies>
+    <inbound>
+        <base />
+        <cors allow-credentials="false">
+            <allowed-origins>
+                <origin>*</origin>
+            </allowed-origins>
+            <allowed-methods>
+                <method>GET</method>
+                <method>POST</method>
+            </allowed-methods>
+            <allowed-headers>
+                <header>*</header>
+            </allowed-headers>
+            <expose-headers>
+                <header>*</header>
+            </expose-headers>
+        </cors>
+        <mock-response status-code="200" content-type="application/json" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>
+'''
 resource apiManagementInstance 'Microsoft.ApiManagement/service@2020-12-01' = {
   name: apiManagementServiceName
   location: location
@@ -63,6 +95,9 @@ resource devProductGroup 'Microsoft.ApiManagement/service/products/groups@2021-0
 resource myWipApi 'Microsoft.ApiManagement/service/products/apis@2021-08-01' = {
   name: 'tester-api'
   parent: TesterProduct
+  dependsOn: [
+    serviceMyWipApi
+  ]
 }
 
 resource serviceMyWipApi 'Microsoft.ApiManagement/service/apis@2021-08-01' = {
@@ -77,6 +112,15 @@ resource serviceMyWipApi 'Microsoft.ApiManagement/service/apis@2021-08-01' = {
     apiType: 'http'
     isCurrent: true
     subscriptionRequired: false
+  }
+}
+
+resource testerApiPolicy 'Microsoft.ApiManagement/service/apis/policies@2021-08-01' = {
+  name: 'policy'
+  parent: serviceMyWipApi
+  properties: {
+    value: testerApisPolicy
+    format: 'xml'
   }
 }
 

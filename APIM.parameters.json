@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "apiManagementServiceName": {
-            "value": "yzapigateway"
+            "value": "yzapim01"
         },
         "publisherEmail": {
             "value": "zuer@zhusmelb.com"
