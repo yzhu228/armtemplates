@@ -20,38 +20,8 @@ param skuCount int = 1
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-var testerApisPolicy = '''
-<policies>
-    <inbound>
-        <base />
-        <cors allow-credentials="false">
-            <allowed-origins>
-                <origin>*</origin>
-            </allowed-origins>
-            <allowed-methods>
-                <method>GET</method>
-                <method>POST</method>
-            </allowed-methods>
-            <allowed-headers>
-                <header>*</header>
-            </allowed-headers>
-            <expose-headers>
-                <header>*</header>
-            </expose-headers>
-        </cors>
-        <mock-response status-code="200" content-type="application/json" />
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-    </on-error>
-</policies>
-'''
+var testerProductName = 'Tester'
+
 resource apiManagementInstance 'Microsoft.ApiManagement/service@2020-12-01' = {
   name: apiManagementServiceName
   location: location
@@ -67,7 +37,7 @@ resource apiManagementInstance 'Microsoft.ApiManagement/service@2020-12-01' = {
 }
 
 resource TesterProduct 'Microsoft.ApiManagement/service/products@2021-08-01' = {
-  name: 'Tester'
+  name: testerProductName
   parent: apiManagementInstance
   properties: {
     displayName: 'Tester Product'
@@ -92,62 +62,14 @@ resource devProductGroup 'Microsoft.ApiManagement/service/products/groups@2021-0
   parent: TesterProduct
 }
 
-resource myWipApi 'Microsoft.ApiManagement/service/products/apis@2021-08-01' = {
-  name: 'tester-api'
-  parent: TesterProduct
+module TesterApiModule 'apis/TesterApi.bicep' = {
+  name: 'TesterApiDeployment'
   dependsOn: [
-    serviceMyWipApi
+    apiManagementInstance
+    TesterProduct
   ]
-}
-
-resource serviceMyWipApi 'Microsoft.ApiManagement/service/apis@2021-08-01' = {
-  name: 'tester-api'
-  parent: apiManagementInstance
-  properties: {
-    displayName: 'Tester API'
-    path: 'tester'
-    protocols: [
-      'https'
-    ]
-    apiType: 'http'
-    isCurrent: true
-    subscriptionRequired: false
-  }
-}
-
-resource testerApiPolicy 'Microsoft.ApiManagement/service/apis/policies@2021-08-01' = {
-  name: 'policy'
-  parent: serviceMyWipApi
-  properties: {
-    value: testerApisPolicy
-    format: 'xml'
-  }
-}
-
-resource wipapiTestOperation 'Microsoft.ApiManagement/service/apis/operations@2021-08-01' = {
-  name: 'test'
-  parent: serviceMyWipApi
-  properties: {
-    urlTemplate: '/test'
-    displayName: 'Test Call'
-    method: 'GET'
-    responses: [
-      {
-        statusCode: 200
-        representations: [
-          {
-            contentType: 'application/json'
-            examples: {
-              'default': {
-                'value': {
-                  'sampleField': 'sampleValue'
-                }
-              }
-            }
-          }
-        ]
-        headers: []
-      }
-    ]
+  params: {
+    apimName: apiManagementServiceName
+    productName: testerProductName
   }
 }
