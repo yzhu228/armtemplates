@@ -2,10 +2,30 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "winvmAdminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/a272041c-6a2a-46cb-b7d3-8fe5200d48c0/resourceGroups/az104lt/providers/Microsoft.KeyVault/vaults/az104Vault0982"
+                },
+                "secretName": "VmAdminPassword"
+            }
+        },
         "vnets": {
             "value": [
                 {
-                    "name": "on-cloud-1",
+                    "name": "onpremise",
+                    "addresses": [
+                        "10.89.0.0/16"
+                    ],
+                    "subnets": [
+                        {
+                            "name": "Subnet-PA",
+                            "addressSpace": "10.89.1.0/24"
+                        }
+                    ]
+                },
+                {
+                    "name": "oncloud1",
                     "addresses": [
                         "10.90.0.0/16"
                     ],
@@ -17,7 +37,7 @@
                     ]
                 },
                 {
-                    "name": "on-cloud-2",
+                    "name": "oncloud2",
                     "addresses": [
                         "10.91.0.0/16"
                     ],

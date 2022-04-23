@@ -8,14 +8,21 @@ param adminUsername string
 @secure()
 param adminPassword string
 
+param scriptStorageEndpoint string
+param installIIS bool = false
+param hasPublicIpAddress bool = true
+
 @allowed([
   'Standard_A2_v2'
+  'Standard_D2_v3'
 ])
 param sku string = 'Standard_A2_v2'
 
 param location string = resourceGroup().location
 
-var storageName = toLower('yz${vmHostName}storage')
+var normalizedHostName = replace(vmHostName, '-', '')
+
+var storageName = toLower('yz${normalizedHostName}storage')
 var nicName = '${vmHostName}-nic'
 var ipconfigName = '${vmHostName}-ipconfig'
 var publicIpName = '${vmHostName}-pip'
@@ -29,7 +36,7 @@ resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
   }
 }
 
-resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2019-11-01' = {
+resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2019-11-01' = if (hasPublicIpAddress) {
   name: publicIpName
   location: location
   properties: {
@@ -48,9 +55,9 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
       {
         name: ipconfigName
         properties: {
-          publicIPAddress: {
+          publicIPAddress: hasPublicIpAddress ? {
             id: publicIPAddress.id
-          }
+          } : null
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
             id: resourceId(vnetRg, 'Microsoft.Network/virtualNetworks/subnets', vnetName, subnetName)
@@ -98,6 +105,27 @@ resource windowsVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
         enabled: true
         storageUri: storageaccount.properties.primaryEndpoints.blob
       }
+    }
+  }
+}
+
+resource winCustomScript 'Microsoft.Compute/virtualMachines/extensions@2021-11-01' = if (installIIS) {
+  name: 'installIIS'
+  parent: windowsVM
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    settings: {
+      timestamp: 100
+      commandToExecute: 'powershell -ExecutionPolicy Bypass -File InstallIIS.ps1'
+    }
+    protectedSettings: {
+      fileUris: [
+        '${scriptStorageEndpoint}data/InstallIIS.ps1'
+      ]
     }
   }
 }
