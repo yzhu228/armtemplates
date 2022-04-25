@@ -42,7 +42,7 @@ resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2019-11-01' = if (
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
-      domainNameLabel: 'yz-${vmHostName}'
+      domainNameLabel: toLower('yz-${vmHostName}')
     }
   }
 }
@@ -71,6 +71,9 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-11-01' = {
 resource windowsVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: vmHostName
   location: location
+  dependsOn: [
+    networkInterface
+  ]
   properties: {
     hardwareProfile: {
       vmSize: sku
@@ -91,6 +94,9 @@ resource windowsVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
         name: '${vmHostName}-osdisk'
         caching: 'ReadWrite'
         createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'StandardSSD_LRS'
+        }
       }
     }
     networkProfile: {
