@@ -4,28 +4,25 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1272.37030",
-      "templateHash": "13866362147325691268"
+      "version": "0.5.6.12127",
+      "templateHash": "16520987268715391848"
     }
   },
   "parameters": {
     "apiManagementServiceName": {
       "type": "string",
-      "defaultValue": "[format('apiservice{0}', uniqueString(resourceGroup().id))]",
       "metadata": {
         "description": "The name of the API Management service instance"
       }
     },
     "publisherEmail": {
       "type": "string",
-      "minLength": 1,
       "metadata": {
         "description": "The email address of the owner of the service"
       }
     },
     "publisherName": {
       "type": "string",
-      "minLength": 1,
       "metadata": {
         "description": "The name of the owner of the service"
       }
@@ -34,9 +31,7 @@
       "type": "string",
       "defaultValue": "Developer",
       "allowedValues": [
-        "Developer",
-        "Standard",
-        "Premium"
+        "Developer"
       ],
       "metadata": {
         "description": "The pricing tier of this API Management service"
@@ -45,10 +40,7 @@
     "skuCount": {
       "type": "int",
       "defaultValue": 1,
-      "allowedValues": [
-        1,
-        2
-      ],
+      "maxValue": 2,
       "metadata": {
         "description": "The instance size of this API Management service."
       }
@@ -61,19 +53,261 @@
       }
     }
   },
+  "variables": {
+    "testerProductName": "Tester"
+  },
   "resources": [
     {
       "type": "Microsoft.ApiManagement/service",
-      "apiVersion": "2021-08-01",
+      "apiVersion": "2020-12-01",
       "name": "[parameters('apiManagementServiceName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "[parameters('sku')]",
-        "capacity": "[parameters('skuCount')]"
+        "capacity": "[parameters('skuCount')]",
+        "name": "[parameters('sku')]"
       },
       "properties": {
+        "virtualNetworkType": "None",
         "publisherEmail": "[parameters('publisherEmail')]",
         "publisherName": "[parameters('publisherName')]"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}/{1}', parameters('apiManagementServiceName'), variables('testerProductName'))]",
+      "properties": {
+        "displayName": "Tester Product",
+        "description": "My first example product",
+        "subscriptionRequired": true,
+        "state": "published"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products/groups",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}/{1}/{2}', parameters('apiManagementServiceName'), variables('testerProductName'), 'Guests')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), variables('testerProductName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products/groups",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}/{1}/{2}', parameters('apiManagementServiceName'), variables('testerProductName'), 'Administrators')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), variables('testerProductName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products/groups",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}/{1}/{2}', parameters('apiManagementServiceName'), variables('testerProductName'), 'Developers')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), variables('testerProductName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "TesterApiDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "apimName": {
+            "value": "[parameters('apiManagementServiceName')]"
+          },
+          "productName": {
+            "value": "[variables('testerProductName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.5.6.12127",
+              "templateHash": "5352878093506285869"
+            }
+          },
+          "parameters": {
+            "apimName": {
+              "type": "string"
+            },
+            "productName": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "testerApisPolicy": "<policies>\r\n    <inbound>\r\n        <base />\r\n        <cors allow-credentials=\"false\">\r\n            <allowed-origins>\r\n                <origin>*</origin>\r\n            </allowed-origins>\r\n            <allowed-methods>\r\n                <method>GET</method>\r\n                <method>POST</method>\r\n            </allowed-methods>\r\n            <allowed-headers>\r\n                <header>*</header>\r\n            </allowed-headers>\r\n            <expose-headers>\r\n                <header>*</header>\r\n            </expose-headers>\r\n        </cors>\r\n        <mock-response status-code=\"200\" content-type=\"application/json\" />\r\n    </inbound>\r\n    <backend>\r\n        <base />\r\n    </backend>\r\n    <outbound>\r\n        <base />\r\n    </outbound>\r\n    <on-error>\r\n        <base />\r\n    </on-error>\r\n</policies>\r\n"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ApiManagement/service/products/apis",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), parameters('productName'), 'tester-api')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'tester-api')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), 'tester-api')]",
+              "properties": {
+                "displayName": "Tester API",
+                "path": "tester",
+                "protocols": [
+                  "https"
+                ],
+                "apiType": "http",
+                "isCurrent": true,
+                "subscriptionRequired": false
+              }
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis/policies",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'tester-api', 'policy')]",
+              "properties": {
+                "value": "[variables('testerApisPolicy')]",
+                "format": "xml"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'tester-api')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/apis/operations",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'tester-api', 'test')]",
+              "properties": {
+                "urlTemplate": "/test",
+                "displayName": "Test Call",
+                "method": "GET",
+                "responses": [
+                  {
+                    "statusCode": 200,
+                    "representations": [
+                      {
+                        "contentType": "application/json",
+                        "examples": {
+                          "default": {
+                            "value": {
+                              "sampleField": "sampleValue"
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "headers": []
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'tester-api')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementServiceName'))]",
+        "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), variables('testerProductName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "TesterFunctionApiDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "apimName": {
+            "value": "[parameters('apiManagementServiceName')]"
+          },
+          "funcAppName": {
+            "value": "testerapi1922"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.5.6.12127",
+              "templateHash": "3249496977603601628"
+            }
+          },
+          "parameters": {
+            "apimName": {
+              "type": "string"
+            },
+            "funcAppName": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "funcKeyName": "[format('{0}-key', parameters('funcAppName'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/sites/host/functionKeys",
+              "apiVersion": "2021-03-01",
+              "name": "[format('{0}/default/apim-{1}', parameters('funcAppName'), parameters('apimName'))]",
+              "properties": {
+                "name": "[format('apim-{0}', parameters('apimName'))]"
+              }
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/namedValues",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), variables('funcKeyName'))]",
+              "properties": {
+                "displayName": "[parameters('funcAppName')]",
+                "value": "[reference(resourceId('Microsoft.Web/sites/host/functionKeys', split(format('{0}/default/apim-{1}', parameters('funcAppName'), parameters('apimName')), '/')[0], split(format('{0}/default/apim-{1}', parameters('funcAppName'), parameters('apimName')), '/')[1], split(format('{0}/default/apim-{1}', parameters('funcAppName'), parameters('apimName')), '/')[2])).value]",
+                "tags": [
+                  "key",
+                  "function",
+                  "auto",
+                  "arm"
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/host/functionKeys', split(format('{0}/default/apim-{1}', parameters('funcAppName'), parameters('apimName')), '/')[0], split(format('{0}/default/apim-{1}', parameters('funcAppName'), parameters('apimName')), '/')[1], split(format('{0}/default/apim-{1}', parameters('funcAppName'), parameters('apimName')), '/')[2])]"
+              ]
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/backends",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}/{1}', parameters('apimName'), format('{0}FuncApi', parameters('funcAppName')))]",
+              "properties": {
+                "description": "Tester Function App API",
+                "protocol": "http",
+                "url": "[format('https://{0}.azurewebsites.net/', parameters('funcAppName'))]",
+                "resourceId": "[resourceId('Microsoft.Web/sites/functions', parameters('funcAppName'), 'Profile')]",
+                "credentials": {
+                  "header": {
+                    "x-functions-key": [
+                      "[format('{{{{{0}}}}}', variables('funcKeyName'))]"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
       }
     }
   ]
