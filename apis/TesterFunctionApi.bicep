@@ -103,3 +103,13 @@ resource testerApiPolicy 'Microsoft.ApiManagement/service/apis/policies@2021-08-
     format: 'xml'
   }
 }
+
+resource funcConfig 'Microsoft.Web/sites/config@2021-03-01' = {
+  name: 'web'
+  parent: funcSite
+  properties: {
+    apiManagementConfig: {
+      id: funcAppApi.id
+    }
+  }
+}
