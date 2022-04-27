@@ -76,6 +76,10 @@ module TesterApiModule 'apis/TesterApi.bicep' = {
 
 module TesterFuncApiModule 'apis/TesterFunctionApi.bicep' = {
   name: 'TesterFunctionApiDeployment'
+  dependsOn: [
+    apiManagementInstance
+    TesterProduct
+  ]
   params: {
     apimName: apiManagementServiceName
     funcAppName: 'testerapi1922'

@@ -59,6 +59,9 @@ resource kvAppKey 'Microsoft.ApiManagement/service/namedValues@2021-08-01' = {
 resource serviceBackend 'Microsoft.ApiManagement/service/backends@2021-08-01' = {
   name: funcAppName
   parent: apimInstance
+  dependsOn: [
+    kvAppKey
+  ]
   properties: {
     description: funcAppName
     protocol: 'http'
@@ -77,6 +80,9 @@ resource serviceBackend 'Microsoft.ApiManagement/service/backends@2021-08-01' = 
 resource funcAppApi 'Microsoft.ApiManagement/service/apis@2021-08-01' = {
   name: 'tester-func-api'
   parent: apimInstance
+  dependsOn: [
+    serviceBackend
+  ]
   properties: {
     displayName: 'Tester Function API'
     path: 'functionapi'
