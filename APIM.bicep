@@ -20,6 +20,9 @@ param skuCount int = 1
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
+@description('Name of the function')
+param funcName string = 'testerapi1922'
+
 var testerProductName = 'Tester'
 
 resource apiManagementInstance 'Microsoft.ApiManagement/service@2020-12-01' = {
@@ -82,6 +85,6 @@ module TesterFuncApiModule 'apis/TesterFunctionApi.bicep' = {
   ]
   params: {
     apimName: apiManagementServiceName
-    funcAppName: 'testerapi1922'
+    funcAppName: funcName
   }
 }

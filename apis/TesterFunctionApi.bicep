@@ -2,23 +2,8 @@ param apimName string
 param funcAppName string
 
 var funcKeyName = '${funcAppName}-key'
-var functionApiPolicy = replace('''
-<policies>
-    <inbound>
-        <base />
-        <set-backend-service id="apim-generated-policy" backend-id="{funcAppName}" />
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-    </on-error>
-</policies>
-''', '{funcAppName}', '${funcAppName}')
+var policyContent = loadTextContent('TesterFunctionApi.policy.xml', 'utf-8')
+var functionApiPolicy = replace(policyContent, '{funcAppName}', '${funcAppName}')
 
 resource funcSite 'Microsoft.Web/sites@2021-03-01' existing = {
   name: funcAppName

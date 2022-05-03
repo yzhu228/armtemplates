@@ -1,38 +1,7 @@
 param apimName string
 param productName string
 
-var testerApisPolicy = '''
-<policies>
-    <inbound>
-        <base />
-        <cors allow-credentials="false">
-            <allowed-origins>
-                <origin>*</origin>
-            </allowed-origins>
-            <allowed-methods>
-                <method>GET</method>
-                <method>POST</method>
-            </allowed-methods>
-            <allowed-headers>
-                <header>*</header>
-            </allowed-headers>
-            <expose-headers>
-                <header>*</header>
-            </expose-headers>
-        </cors>
-        <mock-response status-code="200" content-type="application/json" />
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-    </on-error>
-</policies>
-'''
+var testerApisPolicy = loadTextContent('TesterApi.bicep')
 
 resource TesterProduct 'Microsoft.ApiManagement/service/products@2021-08-01' existing = {
   name: productName
