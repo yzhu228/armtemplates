@@ -45,6 +45,13 @@
                 "description": "Should an extension be setup for build tools and IIS"
             },
             "defaultValue": false
+        },
+        "joinAD": {
+            "type": "bool",
+            "metadata": {
+                "description": "Whether this VM joins the Azure AD"
+            },
+            "defaultValue": false
         }
     },
     "variables": {
@@ -122,6 +129,9 @@
             ],
             "tags": {
                 "displayName": "[parameters('vmHostName')]"
+            },
+            "identity": {
+                "type": "SystemAssigned"
             },
             "properties": {
                 "hardwareProfile": {
