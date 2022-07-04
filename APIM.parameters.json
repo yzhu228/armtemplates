@@ -19,9 +19,6 @@
         },
         "location": {
             "value": "australiaeast"
-        },
-        "funcName": {
-            "value": "TesterAPI"
         }
     }
 }

@@ -1,16 +1,17 @@
 param apimName string
+param funcSiteName string
 param funcAppName string
 
-var funcKeyName = '${funcAppName}-key'
+var funcKeyName = '${funcSiteName}-key'
 var policyContent = loadTextContent('TesterFunctionApi.policy.xml', 'utf-8')
-var functionApiPolicy = replace(policyContent, '{funcAppName}', '${funcAppName}')
+var functionApiPolicy = replace(policyContent, '{funcAppName}', '${funcSiteName}')
 
 resource funcSite 'Microsoft.Web/sites@2021-03-01' existing = {
-  name: funcAppName
+  name: funcSiteName
 }
 
 resource funcApp 'Microsoft.Web/sites/functions@2021-03-01' existing = {
-  name: 'Profile'
+  name: funcAppName
   parent: funcSite
 }
 
@@ -42,15 +43,15 @@ resource kvAppKey 'Microsoft.ApiManagement/service/namedValues@2021-08-01' = {
 }
 
 resource serviceBackend 'Microsoft.ApiManagement/service/backends@2021-08-01' = {
-  name: funcAppName
+  name: funcSiteName
   parent: apimInstance
   dependsOn: [
     kvAppKey
   ]
   properties: {
-    description: funcAppName
+    description: funcSiteName
     protocol: 'http'
-    url: 'https://${funcAppName}.azurewebsites.net/api'
+    url: 'https://${funcSiteName}.azurewebsites.net/api'
     resourceId: 'https://management.azure.com${funcApp.id}'
     credentials: {
       header: {

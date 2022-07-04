@@ -1,7 +1,7 @@
 param apimName string
 param productName string
 
-var testerApisPolicy = loadTextContent('TesterApi.bicep')
+var testerApisPolicy = loadTextContent('TesterApi.policy.xml')
 
 resource TesterProduct 'Microsoft.ApiManagement/service/products@2021-08-01' existing = {
   name: productName

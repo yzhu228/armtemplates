@@ -9,6 +9,7 @@ param publisherName string
 
 @description('The pricing tier of this API Management service')
 @allowed([
+  'Consumption'
   'Developer'
 ])
 param sku string = 'Developer'
@@ -19,9 +20,6 @@ param skuCount int = 1
 
 @description('Location for all resources.')
 param location string = resourceGroup().location
-
-@description('Name of the function')
-param funcName string = 'testerapi1922'
 
 var testerProductName = 'Tester'
 
@@ -37,6 +35,31 @@ resource apiManagementInstance 'Microsoft.ApiManagement/service@2020-12-01' = {
     publisherEmail: publisherEmail
     publisherName: publisherName
   }
+
+  resource managementApi 'tenant' = {
+    name: 'access'
+    properties: {
+      enabled: true
+    }
+  }
+}
+
+resource starterProduct 'Microsoft.ApiManagement/service/products@2021-08-01' = {
+  name: 'Starter'
+  parent: apiManagementInstance
+  properties: {
+    displayName: 'Starter'
+    state: 'notPublished'
+  }
+}
+
+resource unlimitedProduct 'Microsoft.ApiManagement/service/products@2021-08-01' = {
+  name: 'Unlimited'
+  parent: apiManagementInstance
+  properties: {
+    displayName: 'Unlimited'
+    state: 'notPublished'
+  }
 }
 
 resource TesterProduct 'Microsoft.ApiManagement/service/products@2021-08-01' = {
@@ -47,6 +70,15 @@ resource TesterProduct 'Microsoft.ApiManagement/service/products@2021-08-01' = {
     description: 'My first example product'
     subscriptionRequired: true
     state: 'published'
+  }
+}
+
+resource productDefaultSubscription 'Microsoft.ApiManagement/service/subscriptions@2021-08-01' = {
+  name: 'Def-${testerProductName}'
+  parent: apiManagementInstance
+  properties: {
+    scope: TesterProduct.id
+    displayName: 'Default-${testerProductName}'
   }
 }
 
@@ -65,26 +97,51 @@ resource devProductGroup 'Microsoft.ApiManagement/service/products/groups@2021-0
   parent: TesterProduct
 }
 
-module TesterApiModule 'apis/TesterApi.bicep' = {
-  name: 'TesterApiDeployment'
-  dependsOn: [
-    apiManagementInstance
-    TesterProduct
-  ]
-  params: {
-    apimName: apiManagementServiceName
-    productName: testerProductName
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
+  name: 'apim-laworkspace'
+  location: location
+  properties: {
+    retentionInDays: 30
+    features: {
+      searchVersion: 1
+      legacy: 0
+      enableLogAccessUsingOnlyResourcePermissions: true
+    }
   }
 }
 
-module TesterFuncApiModule 'apis/TesterFunctionApi.bicep' = {
-  name: 'TesterFunctionApiDeployment'
-  dependsOn: [
-    apiManagementInstance
-    TesterProduct
-  ]
-  params: {
-    apimName: apiManagementServiceName
-    funcAppName: funcName
+// App Insights
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: 'apim-ain'
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
   }
 }
+
+// module TesterApiModule 'apis/TesterApi.bicep' = {
+//   name: 'TesterApiDeployment'
+//   dependsOn: [
+//     apiManagementInstance
+//     TesterProduct
+//   ]
+//   params: {
+//     apimName: apiManagementServiceName
+//     productName: testerProductName
+//   }
+// }
+
+// module TesterFuncApiModule 'apis/TesterFunctionApi.bicep' = {
+//   name: 'TesterFunctionApiDeployment'
+//   dependsOn: [
+//     apiManagementInstance
+//     TesterProduct
+//   ]
+//   params: {
+//     apimName: apiManagementServiceName
+//     funcSiteName: siteName
+//     funcAppName: funcName
+//   }
+// }
